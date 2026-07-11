@@ -1,0 +1,30 @@
+# Supabase RLS + Realtime Checklist (FlowTrade)
+
+## 1) Tabelas envolvidas
+- estoque_loja
+- estoque_categoria
+- estoque_produto
+- estoque_funcionario
+
+## 2) Campo de filtro por loja
+- estoque_categoria: loja_id
+- estoque_produto: loja_id
+
+## 3) O que é necessário para Realtime + RLS funcionarem
+- RLS habilitado nas tabelas que vão disparar eventos: estoque_categoria e estoque_produto
+- Políticas (SELECT/UPDATE/INSERT/DELETE) que garantam que o usuário só consegue ver a própria loja
+- As policies precisam ser coerentes com o mapeamento do usuário -> loja.
+
+## 4) Recomendações para o RLS funcionar com sua regra "dono vs funcionário"
+- Para cada operação, deduza a loja permitida via:
+  - dono: estoque_loja.dono = auth.uid() (ou equivalente)
+  - funcionário: estoque_funcionario.usuario = auth.uid() e estoque_funcionario.loja_id = estoque_produto.loja_id
+
+## 5) Verificação do Realtime
+- No Supabase Dashboard, habilitar Realtime/Replication para estoque_produto e estoque_categoria
+- Confirmar que o cliente recebe events que refletem row changes
+
+## 6) Frontend
+- Ao receber event, refazer fetch do endpoint do Django (porque o Django já filtra por loja do JWT)
+- Isso evita depender 100% do conteúdo do evento e mantém consistência.
+
